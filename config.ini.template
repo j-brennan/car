@@ -1,0 +1,16 @@
+[user]
+email = my@email.com
+password = mypassword
+
+[car]
+vin = 123ABC
+
+[url]
+login = https://login.apps.emea.vwapps.io
+identity = https://identity.vwgroup.io
+api = https://mobileapi.apps.emea.vwapps.io
+
+[settings]
+token_file = tokens.json
+vehicles_file = output/vehicles_%%Y%%m%%d_%%H%%M%%S.json
+vehicle_status_file = output/vehicle_status_%%Y%%m%%d_%%H%%M%%S.json
