@@ -88,7 +88,32 @@ class Tokens:
         try:
             logging.info("Submitting password")
             resp = s.post(identity_url + action, data=data)
-            # TODO: raise error
+
+            # sometimes updated terms-and-conditions need to be accepted
+            soup = BeautifulSoup(resp.text, "html.parser")
+            form = soup.find("form", { "id": "emailPasswordForm" })
+            action = form.get("action")
+            # TODO: add all hidden inputs within the form
+            data = {
+                "_csrf": form.find(id="csrf").get("value"),
+                "relayState": form.find(id="input_relayState").get("value"),
+                "hmac": form.find(id="hmac").get("value"),
+                "legalDocuments[0].name": "termsOfUse",
+                "legalDocuments[0].language": "en",
+                "legalDocuments[0].version": "1.0",
+                "legalDocuments[0].updated": "no",
+                "legalDocuments[1].name": "dataPrivacy",
+                "legalDocuments[1].language": "en",
+                "legalDocuments[1].version": "1.0",
+                "legalDocuments[1].updated": "yes"
+            }
+            logging.info("Accepting updated terms-and-conditions")
+            resp = s.post(identity_url + action, data=data)
+
+            # TODO: raise error as we should not reach here
+            logging.error("Unexpected stage within the login process")
+            logging.info("resp.status_code: %s", resp.status_code)
+            logging.info("resp.text: %s", resp.text)
         except requests.exceptions.InvalidSchema as e:
             # No connection adapters were found for 'weconnect://authenticated#
             eMsg = str(e)
