@@ -100,7 +100,6 @@ class Tokens:
 
             # TODO: raise error as we should not reach here
             logging.error("Unexpected stage within the login process")
-            logging.info("resp.status_code: %s", resp.status_code)
             logging.info("resp.text: %s", resp.text)
         except requests.exceptions.InvalidSchema as e:
             # No connection adapters were found for 'weconnect://authenticated#
