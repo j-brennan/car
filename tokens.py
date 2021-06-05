@@ -59,13 +59,12 @@ class Tokens:
         # submit email identity
         soup = BeautifulSoup(resp.text, "html.parser")
         form = soup.find("form", { "id": "emailPasswordForm" })
-        params = {
-            "_csrf": form.find(id="csrf").get("value"),
-            "registerFlow": False,
-            "relayState": form.find(id="input_relayState").get("value"),
-            "hmac": form.find(id="hmac").get("value"),
-            "email": config.get("user", "email")
-        }
+        params = {}
+        form_inputs = form.find_all("input")
+        for form_input in form_inputs:
+            params[form_input.get("name")] = form_input.get("value")
+        params["email"] = config.get("user", "email")
+        params["registerFlow"] = False
         logging.info("Submitting email as identity")
         resp = s.get(identity_url + form.get("action"), params=params)
         resp.raise_for_status()
@@ -74,13 +73,12 @@ class Tokens:
         soup = BeautifulSoup(resp.text, "html.parser")
         form = soup.find("form", { "id": "credentialsForm" })
         action = form.get("action").replace("/authenticate", "/phone-email/authenticate")
-        data = {
-            "_csrf": form.find(id="csrf").get("value"),
-            "relayState": form.find(id="input_relayState").get("value"),
-            "hmac": form.find(id="hmac").get("value"),
-            "email": form.find(id="email").get("value"),
-            "password": config.get("user", "password")
-        }
+        data = {}
+        form_inputs = form.find_all("input")
+        for form_input in form_inputs:
+            data[form_input.get("name")] = form_input.get("value")
+        data["password"] = config.get("user", "password")
+
         # NOTE: shortcut alert! rather than define an endpoint
         # to service the authenticated callback we will just
         # capture the exception of which its message will include
@@ -88,7 +86,21 @@ class Tokens:
         try:
             logging.info("Submitting password")
             resp = s.post(identity_url + action, data=data)
-            # TODO: raise error
+
+            # sometimes updated terms-and-conditions need to be accepted
+            soup = BeautifulSoup(resp.text, "html.parser")
+            form = soup.find("form", { "id": "emailPasswordForm" })
+            action = form.get("action")
+            data = {}
+            form_inputs = form.find_all("input")
+            for form_input in form_inputs:
+                data[form_input.get("name")] = form_input.get("value")
+            logging.info("Accepting updated terms-and-conditions")
+            resp = s.post(identity_url + action, data=data)
+
+            # TODO: raise error as we should not reach here
+            logging.error("Unexpected stage within the login process")
+            logging.info("resp.text: %s", resp.text)
         except requests.exceptions.InvalidSchema as e:
             # No connection adapters were found for 'weconnect://authenticated#
             eMsg = str(e)
