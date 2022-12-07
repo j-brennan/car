@@ -52,7 +52,7 @@ class Car:
             "Authorization": "Bearer {}".format(self.tokens.get_access_token())
         }
         vin = config.get("car", "vin")
-        resp = self._get(api_url + "/vehicles/" + vin + "/status", headers=headers)
+        resp = self._get(api_url + "/vehicles/" + vin + "/selectivestatus?jobs=all", headers=headers)
         resp_json = resp.json()
 
         resp_json["requestTimestamp"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -63,9 +63,9 @@ class Car:
             json.dump(resp_json, f, sort_keys=True, indent=4)
 
         if resp_json["data"]:
-            charging_state = resp_json["data"]["chargingStatus"]["chargingState"]
-            current_soc = resp_json["data"]["batteryStatus"]["currentSOC_pct"]
-            battery_status_timestamp = resp_json["data"]["batteryStatus"]["carCapturedTimestamp"]
+            charging_state = resp_json["charging"]["chargingStatus"]["value"]["chargingState"]
+            current_soc = resp_json["charging"]["batteryStatus"]["value"]["currentSOC_pct"]
+            battery_status_timestamp = resp_json["charging"]["batteryStatus"]["value"]["carCapturedTimestamp"]
             logging.info("charging_state           : %s", charging_state)
             logging.info("current_soc              : %s", current_soc)
             logging.info("battery_status_timestamp : %s", battery_status_timestamp)
