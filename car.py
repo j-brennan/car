@@ -105,8 +105,6 @@ class Car:
         }
         vin = config.get("car", "vin")
         resp = self._post(api_url + "/vehicles/" + vin + "/charging/" + action, headers=headers)
-        logging.info("Response to charging request:")
-        logging.info(resp.text)
         resp_json = resp.json()
         logging.info("requestID: %s", resp_json["data"]["requestID"])
 
