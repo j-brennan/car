@@ -1,4 +1,5 @@
 import configparser
+import re
 import requests
 import json
 import secrets
@@ -59,25 +60,33 @@ class Tokens:
         # submit email identity
         soup = BeautifulSoup(resp.text, "html.parser")
         form = soup.find("form", { "id": "emailPasswordForm" })
-        params = {}
-        form_inputs = form.find_all("input")
-        for form_input in form_inputs:
-            params[form_input.get("name")] = form_input.get("value")
-        params["email"] = config.get("user", "email")
-        params["registerFlow"] = False
-        logging.info("Submitting email as identity")
-        resp = s.get(identity_url + form.get("action"), params=params)
-        resp.raise_for_status()
-
-        # submit password
-        soup = BeautifulSoup(resp.text, "html.parser")
-        form = soup.find("form", { "id": "credentialsForm" })
-        action = form.get("action").replace("/authenticate", "/phone-email/authenticate")
         data = {}
         form_inputs = form.find_all("input")
         for form_input in form_inputs:
             data[form_input.get("name")] = form_input.get("value")
+        data["email"] = config.get("user", "email")
+        data["registerFlow"] = False
+        logging.info("Submitting email as identity")
+        form_url = identity_url + form.get("action")
+        resp = s.post(form_url, data=data)
+        resp.raise_for_status()
+
+        # submit password
+        soup = BeautifulSoup(resp.text, "html.parser")
+        form_url = form_url.replace("/login/identifier", "/login/authenticate")
         data["password"] = config.get("user", "password")
+
+        hmac = None
+        script_elements = soup.find_all("script")
+        for script_element in script_elements:
+            if script_element.string:
+                if script_element.string.strip().startswith("window._IDK ="):
+                    m = re.search(r'\"hmac\":\"([^\"]*)\"', script_element.string)
+                    if m:
+                        hmac = m.group(1)
+        if not hmac:
+            logging.error("Unable to locate hmac")
+        data["hmac"] = hmac
 
         # NOTE: shortcut alert! rather than define an endpoint
         # to service the authenticated callback we will just
@@ -85,18 +94,15 @@ class Tokens:
         # the location with fragment containing the data we need
         try:
             logging.info("Submitting password")
-            resp = s.post(identity_url + action, data=data)
+            resp = s.post(form_url, data=data)
 
-            # sometimes updated terms-and-conditions need to be accepted
+            # if we get here instead of catching an exception it means
+            # that there are updated terms-and-conditions that need to
+            # be accepted
             soup = BeautifulSoup(resp.text, "html.parser")
-            form = soup.find("form", { "id": "emailPasswordForm" })
-            action = form.get("action")
-            data = {}
-            form_inputs = form.find_all("input")
-            for form_input in form_inputs:
-                data[form_input.get("name")] = form_input.get("value")
-            logging.info("Accepting updated terms-and-conditions")
-            resp = s.post(identity_url + action, data=data)
+            logging.info(resp.text)
+
+            # TODO: support new terms-and-conditions flow
 
             # TODO: raise error as we should not reach here
             logging.error("Unexpected stage within the login process")

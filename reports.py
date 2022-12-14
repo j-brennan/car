@@ -33,19 +33,19 @@ class Reports:
             fields = {
                 # <csv header name>              : <path to value within status data>
                 "timestamp"                      : ["requestTimestamp"],
-                "car_captured_timestamp"         : ["data", "chargingStatus", "carCapturedTimestamp"],
-                "max_charge_current_ac"          : ["data", "chargingSettings", "maxChargeCurrentAC"],
-                "plug_connection_state"          : ["data", "plugStatus", "plugConnectionState"],
-                "charging_state"                 : ["data", "chargingStatus", "chargingState"],
-                "plug_lock_state"                : ["data", "plugStatus", "plugLockState"],
-                "charge_power_kw"                : ["data", "chargingStatus", "chargePower_kW"],
-                "charge_rate_kmph"               : ["data", "chargingStatus", "chargeRate_kmph"],
-                "target_soc_pct"                 : ["data", "chargingSettings", "targetSOC_pct"],
-                "current_soc_pct"                : ["data", "batteryStatus", "currentSOC_pct"],
-                "remaining_charging_time_m"      : ["data", "chargingStatus", "remainingChargingTimeToComplete_min"],
-                "cruising_range_electric_km"     : ["data", "batteryStatus", "cruisingRangeElectric_km"],
-                "climatisation_state"            : ["data", "climatisationStatus", "climatisationState"],
-                "remaining_climatisation_time_m" : ["data", "climatisationStatus", "remainingClimatisationTime_min"]
+                "car_captured_timestamp"         : ["charging", "chargingStatus", "value", "carCapturedTimestamp"],
+                "max_charge_current_ac"          : ["charging", "chargingSettings", "value", "maxChargeCurrentAC"],
+                "plug_connection_state"          : ["charging", "plugStatus", "value", "plugConnectionState"],
+                "charging_state"                 : ["charging", "chargingStatus", "value", "chargingState"],
+                "plug_lock_state"                : ["charging", "plugStatus", "value", "plugLockState"],
+                "charge_power_kw"                : ["charging", "chargingStatus", "value", "chargePower_kW"],
+                "charge_rate_kmph"               : ["charging", "chargingStatus", "value", "chargeRate_kmph"],
+                "target_soc_pct"                 : ["charging", "chargingSettings", "value", "targetSOC_pct"],
+                "current_soc_pct"                : ["charging", "batteryStatus", "value", "currentSOC_pct"],
+                "remaining_charging_time_m"      : ["charging", "chargingStatus", "value", "remainingChargingTimeToComplete_min"],
+                "cruising_range_electric_km"     : ["charging", "batteryStatus", "value", "cruisingRangeElectric_km"],
+                "climatisation_state"            : ["climatisation", "climatisationStatus", "value", "climatisationState"],
+                "remaining_climatisation_time_m" : ["climatisation", "climatisationStatus", "value", "remainingClimatisationTime_min"]
             }
 
             csv_writer = csv.DictWriter(
@@ -70,14 +70,22 @@ class Reports:
 
                     data = json.load(json_file)
 
-                    if "data" not in data or not data["data"]:
-                        continue
+                    # if "data" not in data or not data["data"]:
+                    #     continue
+
+                    pre_2022dec_format = False
+                    if "data" in data:
+                        pre_2022dec_format = True
 
                     details = {}
 
                     for fieldname, value_keys in fields.items():
                         value = data
-                        for value_key in value_keys:
+                        for idx, value_key in enumerate(value_keys):
+                            if idx == 0 and len(value_keys) > 1 and pre_2022dec_format:
+                                value_key = "data"
+                            if value_key == "value" and pre_2022dec_format:
+                                continue
                             if value_key not in value:
                                 raise RuntimeError("Unable to find '{}' value using path: {}".format(fieldname, value_keys))
                             value = value[value_key]

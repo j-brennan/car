@@ -52,7 +52,7 @@ class Car:
             "Authorization": "Bearer {}".format(self.tokens.get_access_token())
         }
         vin = config.get("car", "vin")
-        resp = self._get(api_url + "/vehicles/" + vin + "/status", headers=headers)
+        resp = self._get(api_url + "/vehicles/" + vin + "/selectivestatus?jobs=all", headers=headers)
         resp_json = resp.json()
 
         resp_json["requestTimestamp"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -62,10 +62,12 @@ class Car:
         with open(filename, "w") as f:
             json.dump(resp_json, f, sort_keys=True, indent=4)
 
-        if resp_json["data"]:
-            charging_state = resp_json["data"]["chargingStatus"]["chargingState"]
-            current_soc = resp_json["data"]["batteryStatus"]["currentSOC_pct"]
-            battery_status_timestamp = resp_json["data"]["batteryStatus"]["carCapturedTimestamp"]
+        if resp_json["charging"]:
+            plug_connection_state = resp_json["charging"]["plugStatus"]["value"]["plugConnectionState"]
+            charging_state = resp_json["charging"]["chargingStatus"]["value"]["chargingState"]
+            current_soc = resp_json["charging"]["batteryStatus"]["value"]["currentSOC_pct"]
+            battery_status_timestamp = resp_json["charging"]["batteryStatus"]["value"]["carCapturedTimestamp"]
+            logging.info("plug_connection_state    : %s", plug_connection_state)
             logging.info("charging_state           : %s", charging_state)
             logging.info("current_soc              : %s", current_soc)
             logging.info("battery_status_timestamp : %s", battery_status_timestamp)
@@ -76,12 +78,12 @@ class Car:
     def set_charging(self, action="start"):
         resp_json = self.get_status()
 
-        if not resp_json["data"]:
+        if not resp_json["charging"]:
             logging.error("Unable to determine current connection and charging status")
             return
 
-        plug_connection_state = resp_json["data"]["plugStatus"]["plugConnectionState"]
-        charging_state = resp_json["data"]["chargingStatus"]["chargingState"]
+        plug_connection_state = resp_json["charging"]["plugStatus"]["value"]["plugConnectionState"]
+        charging_state = resp_json["charging"]["chargingStatus"]["value"]["chargingState"]
 
         if not plug_connection_state == "connected":
             logging.warn("Plug needs to be connected - currently: %s", plug_connection_state)
