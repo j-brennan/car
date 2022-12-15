@@ -67,9 +67,18 @@ class Car:
             charging_state = resp_json["charging"]["chargingStatus"]["value"]["chargingState"]
             current_soc = resp_json["charging"]["batteryStatus"]["value"]["currentSOC_pct"]
             battery_status_timestamp = resp_json["charging"]["batteryStatus"]["value"]["carCapturedTimestamp"]
+            remaining_mins = resp_json["charging"]["chargingStatus"]["value"]["remainingChargingTimeToComplete_min"]
+            r_hour, r_min = divmod(remaining_mins, 60)
+            charging_info = "{}, {} kW {}, {}h {}m remaining".format(
+                resp_json["charging"]["chargingStatus"]["value"]["chargeMode"],
+                resp_json["charging"]["chargingStatus"]["value"]["chargePower_kW"],
+                resp_json["charging"]["chargingStatus"]["value"]["chargeType"],
+                r_hour,
+                r_min
+            )
             logging.info("plug_connection_state    : %s", plug_connection_state)
-            logging.info("charging_state           : %s", charging_state)
-            logging.info("current_soc              : %s", current_soc)
+            logging.info("charging_state           : {} ({})".format(charging_state, charging_info))
+            logging.info("current_soc              : %s%%", current_soc)
             logging.info("battery_status_timestamp : %s", battery_status_timestamp)
 
         return resp_json
