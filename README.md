@@ -5,13 +5,12 @@
     brew install pyenv
     pyenv install 3.9.4
     pyenv global 3.9.4
-    pip3 install requests
-    pip3 install beautifulsoup4
+    pip3 install -r requirements.txt
 
 ## Ubuntu installation
 
     sudo apt install python3-pip
-    sudo pip3 install beautifulsoup4
+    sudo pip3 install -r requirements.txt
 
 ## Configuration
 
