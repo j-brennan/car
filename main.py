@@ -1,7 +1,6 @@
 import logging
 import requests
 import sys
-from tokens import Tokens
 from car import Car
 
 logging.basicConfig(
@@ -13,6 +12,7 @@ logging.basicConfig(
 )
 
 logging.getLogger().addHandler(logging.StreamHandler())
+
 
 def main(command):
     car = Car()
@@ -42,3 +42,4 @@ if __name__ == "__main__":
         logging.error("Error: " + str(e))
     except Exception as e:
         logging.exception("Exception processing: " + command)
+        logging.exception("Exception: " + str(e))

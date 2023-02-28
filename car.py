@@ -2,13 +2,8 @@ import configparser
 import datetime
 import requests
 import json
-import secrets
 import time
-import urllib.parse as urlparse
-from bs4 import BeautifulSoup
-from pathlib import Path
 from tokens import Tokens
-from urllib.parse import parse_qs
 import logging
 
 logger = logging.getLogger(__name__)
