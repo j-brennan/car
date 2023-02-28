@@ -59,7 +59,7 @@ class Tokens:
 
         # submit email identity
         soup = BeautifulSoup(resp.text, "html.parser")
-        form = soup.find("form", { "id": "emailPasswordForm" })
+        form = soup.find("form", {"id": "emailPasswordForm"})
         data = {}
         form_inputs = form.find_all("input")
         for form_input in form_inputs:
@@ -109,12 +109,12 @@ class Tokens:
             logging.info("resp.text: %s", resp.text)
         except requests.exceptions.InvalidSchema as e:
             # No connection adapters were found for 'weconnect://authenticated#
-            eMsg = str(e)
-            location = eMsg[eMsg.index("weconnect"):-1]
+            e_msg = str(e)
+            location = e_msg[e_msg.index("weconnect"):-1]
             fragments = parse_qs(urlparse.urlparse(location).fragment)
 
         # fetch access and refresh tokens
-        headers = { "Content-type": "application/json" }
+        headers = {"Content-type": "application/json"}
         data = {
             "state": fragments["state"][0],
             "id_token": fragments["id_token"][0],
@@ -131,7 +131,6 @@ class Tokens:
         self.tokens = resp.json()
         with open(config.get("settings", "token_file"), "w") as f:
             json.dump(self.tokens, f)
-
 
     def refresh_tokens_from_web(self):
         logging.info("Refreshing tokens using web api")
