@@ -103,6 +103,8 @@ class Tokens:
             logging.info(resp.text)
 
             # TODO: support new terms-and-conditions flow
+            #       for now, login via app or https://vwid.vwgroup.io/account
+            #       and accept the new terms-and-conditions
 
             # TODO: raise error as we should not reach here
             logging.error("Unexpected stage within the login process")

@@ -6,9 +6,9 @@ password = mypassword
 vin = 123ABC
 
 [url]
-login = https://login.apps.emea.vwapps.io
+login = https://emea.bff.cariad.digital/user-login/v1
 identity = https://identity.vwgroup.io
-api = https://mobileapi.apps.emea.vwapps.io
+api = https://emea.bff.cariad.digital/vehicle/v1
 
 [settings]
 token_file = tokens.json
