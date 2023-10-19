@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 config = configparser.ConfigParser()
 config.read("config.ini")
 
+user_agent = config.get("url", "user_agent")
 login_url = config.get("url", "login")
 identity_url = config.get("url", "identity")
 
@@ -49,12 +50,15 @@ class Tokens:
         s = requests.Session()
 
         # fetch the login page
+        headers = {
+            "User-Agent": user_agent
+        }
         params = {
             "nonce": secrets.token_urlsafe(12),
             "redirect_uri": "weconnect://authenticated"
         }
         logging.info("Fetching login page")
-        resp = s.get(login_url + "/authorize", params=params)
+        resp = s.get(login_url + "/authorize", headers=headers, params=params)
         resp.raise_for_status()
 
         # submit email identity
@@ -116,7 +120,10 @@ class Tokens:
             fragments = parse_qs(urlparse.urlparse(location).fragment)
 
         # fetch access and refresh tokens
-        headers = {"Content-type": "application/json"}
+        headers = {
+            "User-Agent": user_agent,
+            "Content-type": "application/json"
+        }
         data = {
             "state": fragments["state"][0],
             "id_token": fragments["id_token"][0],
@@ -137,6 +144,7 @@ class Tokens:
     def refresh_tokens_from_web(self):
         logging.info("Refreshing tokens using web api")
         headers = {
+            "User-Agent": user_agent,
             "Content-type": "application/json",
             "Authorization": "Bearer {}".format(self.get_refresh_token())
         }

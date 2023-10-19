@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 config = configparser.ConfigParser()
 config.read("config.ini")
 
+user_agent = config.get("url", "user_agent")
 api_url = config.get("url", "api")
 
 
@@ -22,6 +23,7 @@ class Car:
     def get_vehicles(self):
         logging.info("Fetching vehicles")
         headers = {
+            "User-Agent": user_agent,
             "Accept": "application/json",
             "Authorization": "Bearer {}".format(self.tokens.get_access_token())
         }
@@ -43,6 +45,7 @@ class Car:
     def get_status(self):
         logging.info("Fetching vehicle status")
         headers = {
+            "User-Agent": user_agent,
             "Accept": "application/json",
             "Authorization": "Bearer {}".format(self.tokens.get_access_token())
         }
@@ -62,6 +65,8 @@ class Car:
             charging_state = resp_json["charging"]["chargingStatus"]["value"]["chargingState"]
             current_soc = resp_json["charging"]["batteryStatus"]["value"]["currentSOC_pct"]
             battery_status_timestamp = resp_json["charging"]["batteryStatus"]["value"]["carCapturedTimestamp"]
+            odometer = resp_json["measurements"]["odometerStatus"]["value"]["odometer"]
+            total_range = resp_json["fuelStatus"]["rangeStatus"]["value"]["totalRange_km"]
 
             remaining_mins = resp_json.get("charging", {}).\
                 get("chargingStatus", {}).\
@@ -83,6 +88,7 @@ class Car:
             logging.info("charging_state           : {} ({})".format(charging_state, charging_info))
             logging.info("current_soc              : %s%%", current_soc)
             logging.info("battery_status_timestamp : %s", battery_status_timestamp)
+            logging.info("odometer                 : {:,} (range {:,})".format(odometer, total_range))
 
         return resp_json
 
@@ -110,6 +116,7 @@ class Car:
         logging.info("Requesting vehicle to %s charging", action)
 
         headers = {
+            "User-Agent": user_agent,
             "Content-type": "application/json",
             "Content-version": "1",
             "Accept": "*/*",
