@@ -6,6 +6,7 @@ password = mypassword
 vin = 123ABC
 
 [url]
+user_agent = car/0.0.0
 login = https://emea.bff.cariad.digital/user-login/v1
 identity = https://identity.vwgroup.io
 api = https://emea.bff.cariad.digital/vehicle/v1
