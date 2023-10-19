@@ -1,11 +1,16 @@
 # car
 
-## macOS installation
+## macOS installation (pyenv or miniconda)
 
     brew install pyenv
-    pyenv install 3.9.4
-    pyenv global 3.9.4
+    pyenv install 3.10
+    pyenv global 3.10
     pip3 install -r requirements.txt
+
+    Download macOS installer for Python 3.10 Miniconda3 (https://docs.conda.io/en/latest/miniconda.html)
+    conda create --name pyvw python=3.10 pip
+    conda activate pyvw
+    pip install -r requirements.txt
 
 ## Ubuntu installation
 
@@ -79,7 +84,7 @@ Sample crontab settings:
     7 0 * * * /usr/bin/python3 /path/to/car/main.py start-charging
 
     # get status every 15 minutes between 00:00 and 09:00
-    #*/15 0-9 * * * /usr/bin/python3 /path/to/car/main.py status
+    */15 0-9 * * * /usr/bin/python3 /path/to/car/main.py status
 
 ## Tokens
 
