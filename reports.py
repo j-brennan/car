@@ -34,10 +34,12 @@ class Reports:
                 # <csv header name>              : <path to value within status data>
                 "timestamp"                      : ["requestTimestamp"],
                 "car_captured_timestamp"         : ["charging", "chargingStatus", "value", "carCapturedTimestamp"],
-                "max_charge_current_ac"          : ["charging", "chargingSettings", "value", "maxChargeCurrentAC"],
+                "odometer"                       : ["measurements", "odometerStatus", "value", "odometer"],
                 "plug_connection_state"          : ["charging", "plugStatus", "value", "plugConnectionState"],
                 "charging_state"                 : ["charging", "chargingStatus", "value", "chargingState"],
                 "plug_lock_state"                : ["charging", "plugStatus", "value", "plugLockState"],
+                "max_charge_current_ac"          : ["charging", "chargingSettings", "value", "maxChargeCurrentAC"],
+                "charge_type"                    : ["charging", "chargingStatus", "value", "chargeType"],
                 "charge_power_kw"                : ["charging", "chargingStatus", "value", "chargePower_kW"],
                 "charge_rate_kmph"               : ["charging", "chargingStatus", "value", "chargeRate_kmph"],
                 "target_soc_pct"                 : ["charging", "chargingSettings", "value", "targetSOC_pct"],
@@ -87,8 +89,10 @@ class Reports:
                             if value_key == "value" and pre_2022dec_format:
                                 continue
                             if value_key not in value:
-                                raise RuntimeError("Unable to find '{}' value using path: {}".format(fieldname, value_keys))
-                            value = value[value_key]
+                                # raise RuntimeError("Unable to find '{}' value using path: {}".format(fieldname, value_keys))
+                                value = "-"
+                            else:
+                                value = value[value_key]
                         details[fieldname] = value
 
                     csv_writer.writerow(details)
