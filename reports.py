@@ -5,6 +5,8 @@ import json
 import os
 import logging
 
+from datetime import datetime
+
 logging.basicConfig(
     filename="log/reports.log",
     level=logging.INFO,
@@ -19,6 +21,45 @@ config = configparser.ConfigParser()
 config.read("config.ini")
 
 
+class ChargingSession:
+    def __init__(self):
+        self.start_time = None
+        self.end_time = None
+        self.charge_type = None
+        self.start_soc = None
+        self.end_soc = None
+        self.start_range = None
+        self.end_range = None
+
+    def print_summary(self):
+        if self.start_time is None and self.end_time is None:
+            print("No data available for this charging session.\n")
+            return
+
+        range_added = "-"
+        if self.start_range is not None and self.end_range is not None:
+            range_added = self.end_range - self.start_range
+
+        soc_added = "-"
+        if self.start_soc is not None and self.end_soc is not None:
+            soc_added = self.end_soc - self.start_soc
+
+        start_time = datetime.fromisoformat(self.start_time[:-1])
+        end_time = datetime.fromisoformat(self.end_time[:-1])
+        duration = end_time - start_time
+
+        weekday_name = start_time.strftime("%A")
+        day_of_month = start_time.strftime("%d")
+        month_name = start_time.strftime("%B")
+        year = start_time.strftime("%Y")
+
+        print(f"{weekday_name} {day_of_month} {month_name}, {year}:")
+        print(f"    type        : {self.charge_type} charging session")
+        print(f"    Range added : {range_added:,} km")
+        print(f"    SOC added   : {soc_added}% ({self.start_soc}% => {self.end_soc}%)")
+        print(f"    Duration    : {duration} ({self.start_time} => {self.end_time})\n")
+
+
 class Reports:
     """Generate reports based on historical vehicle and charge data."""
 
@@ -26,7 +67,7 @@ class Reports:
     def generate_charge_report():
         """Generate a charge report based on historical charge report data files."""
 
-        logging.info("Generating a charge report")
+        logging.info("Generating a charge report\n")
         report_filename = "reports/charge_report.csv"
 
         with open(report_filename, mode="w") as csv_charge_file:
@@ -66,9 +107,11 @@ class Reports:
                 + "*" \
                 + status_filename[status_filename.rfind("."):]
 
+            charging_session = ChargingSession()
+
             for filename in sorted(glob.glob(filename_pattern)):
                 with open(os.path.join(os.getcwd(), filename), "r") as json_file:
-                    logging.info("Processing status file: %s", filename)
+                    # logging.info("Processing status file: %s", filename)
 
                     data = json.load(json_file)
 
@@ -94,6 +137,22 @@ class Reports:
                             else:
                                 value = value[value_key]
                         details[fieldname] = value
+
+                    if details["charging_state"] == "charging":
+                        # start of new session or continuation of existing
+                        if charging_session.start_time is None:
+                            charging_session.start_time = details["car_captured_timestamp"]
+                            charging_session.charge_type = details["charge_type"]
+                            charging_session.start_soc = details["current_soc_pct"]
+                            charging_session.start_range = details["cruising_range_electric_km"]
+                    else:
+                        if charging_session.start_time is not None:
+                            # end of existing session
+                            charging_session.end_time = details["car_captured_timestamp"]
+                            charging_session.end_soc = details["current_soc_pct"]
+                            charging_session.end_range = details["cruising_range_electric_km"]
+                            charging_session.print_summary()
+                            charging_session = ChargingSession()
 
                     csv_writer.writerow(details)
 
