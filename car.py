@@ -50,7 +50,8 @@ class Car:
             "Authorization": "Bearer {}".format(self.tokens.get_access_token())
         }
         vin = config.get("car", "vin")
-        resp = self._get(api_url + "/vehicles/" + vin + "/selectivestatus?jobs=all", headers=headers)
+        jobs = config.get("api", "jobs")
+        resp = self._get(f"{api_url}/vehicles/{vin}/selectivestatus?jobs={jobs}", headers=headers)
         resp_json = resp.json()
 
         resp_json["requestTimestamp"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
