@@ -137,5 +137,5 @@ config.ini
 tokens.json
 
 # Sensitive information
-output/*.json
+output/
 reports/*.csv
